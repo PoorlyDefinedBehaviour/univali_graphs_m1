@@ -228,7 +228,11 @@ impl<T: Eq + Hash + Clone> Graph<T> {
     minimum_spanning_tree
   }
 
-  pub fn dfs_path(&self, starting_vertex: &T) -> Vec<T> {
+  pub fn dfs_path(&self, starting_vertex: &T) -> Result<Vec<T>, VertexNotFoundError<T>> {
+    if !self.adjacency_list.contains_key(starting_vertex) {
+      return Err(VertexNotFoundError(starting_vertex.clone()));
+    }
+
     let mut stack = LinkedList::new();
     let mut path = Vec::new();
     let mut visited_nodes = HashSet::new();
@@ -257,10 +261,14 @@ impl<T: Eq + Hash + Clone> Graph<T> {
       }
     }
 
-    path
+    Ok(path)
   }
 
-  pub fn bfs_path(&self, starting_vertex: &T) -> Vec<T> {
+  pub fn bfs_path(&self, starting_vertex: &T) -> Result<Vec<T>, VertexNotFoundError<T>> {
+    if !self.adjacency_list.contains_key(starting_vertex) {
+      return Err(VertexNotFoundError(starting_vertex.clone()));
+    }
+
     let mut stack = LinkedList::new();
     let mut path = Vec::new();
     let mut visited_nodes = HashSet::new();
@@ -289,7 +297,7 @@ impl<T: Eq + Hash + Clone> Graph<T> {
       }
     }
 
-    path
+    Ok(path)
   }
 }
 
@@ -567,11 +575,22 @@ mod tests {
     graph.add_undirected_edge(0, 3, "d".to_owned(), 8).unwrap();
     graph.add_undirected_edge(1, 4, "e".to_owned(), 5).unwrap();
 
-    let expected = vec![0, 3, 2, 1, 4];
+    let expected = Ok(vec![0, 3, 2, 1, 4]);
 
     let actual = graph.dfs_path(&0);
 
     assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn dfs_path_returns_error_when_starting_vertex_is_not_in_the_graph() {
+    let graph = Graph::new();
+
+    let expected = Err(VertexNotFoundError(-3));
+
+    let actual = graph.dfs_path(&-3);
+
+    assert_eq!(actual, expected)
   }
 
   #[test]
@@ -591,7 +610,18 @@ mod tests {
     graph.add_directed_edge(2, 3, "e".to_owned(), 8).unwrap();
     graph.add_directed_edge(3, 3, "f".to_owned(), 5).unwrap();
 
-    let expected = vec![2, 0, 3, 1];
+    let expected = Ok(vec![2, 0, 3, 1]);
+
+    let actual = graph.bfs_path(&2);
+
+    assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn bfs_path_returns_error_when_starting_vertex_is_not_in_the_graph() {
+    let graph = Graph::new();
+
+    let expected = Err(VertexNotFoundError(2));
 
     let actual = graph.bfs_path(&2);
 
