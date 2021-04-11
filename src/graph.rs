@@ -1,5 +1,5 @@
 use std::cmp::{Eq, Ordering};
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet, LinkedList};
 use std::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -223,6 +223,38 @@ impl<T: Eq + Hash + Clone> Graph<T> {
 
     minimum_spanning_tree
   }
+
+  pub fn dfs_path(&self, starting_vertex: &T) -> Vec<T> {
+    let mut stack = LinkedList::new();
+    let mut path = Vec::new();
+    let mut visited_nodes = HashSet::new();
+
+    // O(1)
+    stack.push_back(starting_vertex.clone());
+
+    while !stack.is_empty() {
+      // O(1)
+      let current_vertex = stack.pop_back().unwrap();
+
+      // O(1)
+      if !visited_nodes.contains(&current_vertex) {
+        path.push(current_vertex.clone());
+      }
+
+      // O(1)~*
+      visited_nodes.insert(current_vertex.clone());
+
+      for neighbor in self.adjacency_list.get(&current_vertex).unwrap() {
+        // O(1)
+        if !visited_nodes.contains(edge_vertex(neighbor)) {
+          // O(1)
+          stack.push_back(edge_vertex(neighbor).clone());
+        }
+      }
+    }
+
+    path
+  }
 }
 
 #[cfg(test)]
@@ -433,6 +465,30 @@ mod tests {
     ];
 
     let actual = graph.minimum_spanning_tree_starting_from_vertex(&0);
+
+    assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn returns_dfs_path() {
+    let mut graph = Graph::new();
+
+    graph.add_vertex(0).unwrap();
+    graph.add_vertex(1).unwrap();
+    graph.add_vertex(2).unwrap();
+    graph.add_vertex(3).unwrap();
+    graph.add_vertex(4).unwrap();
+
+    graph.add_undirected_edge(1, 0, "a".to_owned(), 2).unwrap();
+    graph.add_undirected_edge(0, 2, "b".to_owned(), 6).unwrap();
+
+    graph.add_undirected_edge(2, 1, "c".to_owned(), 3).unwrap();
+    graph.add_undirected_edge(0, 3, "d".to_owned(), 8).unwrap();
+    graph.add_undirected_edge(1, 4, "e".to_owned(), 5).unwrap();
+
+    let expected = vec![0, 3, 2, 1, 4];
+
+    let actual = graph.dfs_path(&0);
 
     assert_eq!(actual, expected);
   }
