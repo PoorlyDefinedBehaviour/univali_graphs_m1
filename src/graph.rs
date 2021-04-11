@@ -1,5 +1,6 @@
 use std::cmp::{Eq, Ordering};
 use std::collections::{BinaryHeap, HashMap, HashSet, LinkedList};
+use std::fmt::Debug;
 use std::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -30,11 +31,11 @@ fn edge_weight<T: PartialEq>(edge: &Edge<T>) -> i32 {
   }
 }
 
-pub type AdjencyList<T> = HashMap<T, Vec<Edge<T>>>;
+pub type AdjencyList<KEY, VALUE> = HashMap<KEY, VALUE>;
 
 #[derive(Debug)]
-pub struct Graph<T: PartialEq> {
-  pub adjacency_list: AdjencyList<T>,
+pub struct Graph<T: PartialEq + Debug> {
+  pub adjacency_list: AdjencyList<T, Vec<Edge<T>>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -62,7 +63,7 @@ impl<T: PartialEq + Eq> PartialOrd for MinimumSpanningTreeEdge<T> {
   }
 }
 
-impl<T: Eq + Hash + Clone> Graph<T> {
+impl<T: Eq + Hash + Clone + Debug> Graph<T> {
   pub fn new() -> Self {
     Graph {
       adjacency_list: HashMap::new(),
@@ -174,11 +175,11 @@ impl<T: Eq + Hash + Clone> Graph<T> {
   fn add_neighbors_to_priority_queue(
     &self,
     vertex: &T,
-    visited_vertexes: &HashSet<T>,
+    visited_vertices: &HashSet<T>,
     priority_queue: &mut BinaryHeap<MinimumSpanningTreeEdge<T>>,
   ) {
     for neighbor in self.adjacency_list.get(vertex).unwrap() {
-      if visited_vertexes.contains(edge_vertex(neighbor)) {
+      if visited_vertices.contains(edge_vertex(neighbor)) {
         continue;
       }
 
@@ -200,11 +201,11 @@ impl<T: Eq + Hash + Clone> Graph<T> {
 
     let mut priority_queue = BinaryHeap::new();
 
-    let mut visited_vertexes = HashSet::new();
+    let mut visited_vertices = HashSet::new();
 
-    visited_vertexes.insert(starting_vertex.clone());
+    visited_vertices.insert(starting_vertex.clone());
 
-    self.add_neighbors_to_priority_queue(starting_vertex, &visited_vertexes, &mut priority_queue);
+    self.add_neighbors_to_priority_queue(starting_vertex, &visited_vertices, &mut priority_queue);
 
     let mut minimum_spanning_tree = Vec::new();
     let mut visited_edges = 0;
@@ -212,15 +213,15 @@ impl<T: Eq + Hash + Clone> Graph<T> {
     while visited_edges != self.adjacency_list.len() - 1 && !priority_queue.is_empty() {
       let cheapest_path = priority_queue.pop().unwrap();
 
-      if visited_vertexes.contains(&cheapest_path.to) {
+      if visited_vertices.contains(&cheapest_path.to) {
         continue;
       }
 
-      visited_vertexes.insert(cheapest_path.to.clone());
+      visited_vertices.insert(cheapest_path.to.clone());
 
       self.add_neighbors_to_priority_queue(
         &cheapest_path.to,
-        &visited_vertexes,
+        &visited_vertices,
         &mut priority_queue,
       );
 
@@ -302,6 +303,151 @@ impl<T: Eq + Hash + Clone> Graph<T> {
     }
 
     Ok(path)
+  }
+
+  fn is_predecessor(&self, vertex_a: &T, vertex_b: &T) -> bool {
+    self.is_successor(vertex_b, vertex_a)
+  }
+
+  fn is_successor(&self, vertex_a: &T, vertex_b: &T) -> bool {
+    if vertex_a == vertex_b {
+      return false;
+    }
+
+    match self.adjacency_list.get(vertex_a) {
+      None => false,
+      Some(neighbors) => neighbors
+        .iter()
+        .any(|neighbor| edge_vertex(neighbor) == vertex_b),
+    }
+  }
+
+  pub fn successors(&self, current_vertex: &T) -> Vec<T> {
+    self
+      .adjacency_list
+      .get(current_vertex)
+      .cloned()
+      .unwrap()
+      .iter()
+      .map(|edge| edge_vertex(edge).clone())
+      .collect()
+  }
+
+  pub fn predecessors(&self, current_vertex: &T) -> Vec<T> {
+    self
+      .adjacency_list
+      .keys()
+      .filter_map(|vertex| {
+        if self
+          .successors(vertex)
+          .iter()
+          .any(|successor| successor == current_vertex)
+        {
+          Some(vertex.clone())
+        } else {
+          None
+        }
+      })
+      .collect()
+  }
+
+  fn mark_plus_vertices(&self, vertex: &T, pluses: &mut HashSet<T>) -> () {
+    pluses.insert(vertex.clone());
+
+    let mut visited_vertices: HashSet<T> = HashSet::new();
+
+    fn go<T: Eq + Hash + Clone + Debug>(
+      graph: &Graph<T>,
+      vertex: &T,
+      pluses: &mut HashSet<T>,
+      visited_vertices: &mut HashSet<T>,
+    ) {
+      if visited_vertices.contains(vertex) {
+        return;
+      }
+
+      visited_vertices.insert(vertex.clone());
+
+      for successor in graph.successors(vertex) {
+        go(graph, &successor, pluses, visited_vertices);
+      }
+
+      if graph
+        .successors(vertex)
+        .iter()
+        .any(|successor| pluses.contains(successor))
+      {
+        pluses.insert(vertex.clone());
+      }
+    }
+
+    go(&self, vertex, pluses, &mut visited_vertices);
+  }
+
+  fn mark_minus_vertices(&self, vertex: &T, minuses: &mut HashSet<T>) -> () {
+    minuses.insert(vertex.clone());
+
+    let mut visited_vertices: HashSet<T> = HashSet::new();
+
+    fn go<T: Eq + Hash + Clone + Debug>(
+      graph: &Graph<T>,
+      vertex: &T,
+      minuses: &mut HashSet<T>,
+      visited_vertices: &mut HashSet<T>,
+    ) {
+      if visited_vertices.contains(vertex) {
+        return;
+      }
+
+      visited_vertices.insert(vertex.clone());
+
+      for predecessor in graph.predecessors(vertex) {
+        go(graph, &predecessor, minuses, visited_vertices);
+      }
+
+      if graph
+        .predecessors(vertex)
+        .iter()
+        .any(|predecessor| minuses.contains(predecessor))
+      {
+        minuses.insert(vertex.clone());
+      }
+    }
+
+    go(&self, vertex, minuses, &mut visited_vertices);
+  }
+
+  pub fn strongly_connected_components(&self, starting_vertex: &T) -> Vec<Vec<T>> {
+    let mut components = vec![];
+
+    let mut vertices: Vec<T> = self.adjacency_list.keys().cloned().collect();
+    let mut pluses = HashSet::new();
+    let mut minuses = HashSet::new();
+
+    let mut current_vertex = starting_vertex.clone();
+
+    loop {
+      self.mark_plus_vertices(&current_vertex, &mut pluses);
+      self.mark_minus_vertices(&current_vertex, &mut minuses);
+
+      let (marked_vertices, unmarked_vertices) = vertices
+        .into_iter()
+        .partition(|vertex| pluses.contains(vertex) && minuses.contains(vertex));
+
+      components.push(marked_vertices);
+
+      pluses.clear();
+
+      minuses.clear();
+
+      vertices = unmarked_vertices;
+
+      if !vertices.is_empty() {
+        current_vertex = vertices.last().cloned().unwrap();
+      } else {
+        return components;
+      }
+    }
   }
 }
 
@@ -642,5 +788,42 @@ mod tests {
     let actual = graph.bfs_path(&2);
 
     assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn returns_graph_strongly_connected_components() {
+    let mut graph = Graph::new();
+
+    graph.add_vertex(1).unwrap();
+    graph.add_vertex(2).unwrap();
+    graph.add_vertex(3).unwrap();
+    graph.add_vertex(4).unwrap();
+    graph.add_vertex(5).unwrap();
+    graph.add_vertex(6).unwrap();
+    graph.add_vertex(7).unwrap();
+    graph.add_vertex(8).unwrap();
+
+    graph.add_directed_edge(1, 2, "1".to_owned(), 1).unwrap();
+    graph.add_directed_edge(2, 5, "2".to_owned(), 1).unwrap();
+    graph.add_directed_edge(2, 7, "3".to_owned(), 1).unwrap();
+    graph.add_directed_edge(3, 1, "4".to_owned(), 1).unwrap();
+    graph.add_directed_edge(3, 4, "5".to_owned(), 1).unwrap();
+    graph.add_directed_edge(4, 6, "6".to_owned(), 1).unwrap();
+    graph.add_directed_edge(5, 8, "7".to_owned(), 1).unwrap();
+    graph.add_directed_edge(6, 5, "8".to_owned(), 1).unwrap();
+    graph.add_directed_edge(7, 1, "9".to_owned(), 1).unwrap();
+    graph.add_directed_edge(7, 3, "10".to_owned(), 1).unwrap();
+    graph.add_directed_edge(7, 8, "11".to_owned(), 1).unwrap();
+    graph.add_directed_edge(8, 4, "12".to_owned(), 1).unwrap();
+
+    let expected = vec![vec![1, 2, 3, 7], vec![4, 5, 6, 8]];
+
+    let mut actual = graph.strongly_connected_components(&1);
+
+    for component in &mut actual {
+      component.sort();
+    }
+
+    assert_eq!(expected, actual);
   }
 }
