@@ -193,7 +193,11 @@ impl<T: Eq + Hash + Clone> Graph<T> {
   pub fn minimum_spanning_tree_starting_from_vertex(
     &self,
     starting_vertex: &T,
-  ) -> Vec<MinimumSpanningTreeEdge<T>> {
+  ) -> Result<Vec<MinimumSpanningTreeEdge<T>>, VertexNotFoundError<T>> {
+    if !self.adjacency_list.contains_key(starting_vertex) {
+      return Err(VertexNotFoundError(starting_vertex.clone()));
+    }
+
     let mut priority_queue = BinaryHeap::new();
 
     let mut visited_vertexes = HashSet::new();
@@ -225,7 +229,7 @@ impl<T: Eq + Hash + Clone> Graph<T> {
       minimum_spanning_tree.push(cheapest_path);
     }
 
-    minimum_spanning_tree
+    Ok(minimum_spanning_tree)
   }
 
   pub fn dfs_path(&self, starting_vertex: &T) -> Result<Vec<T>, VertexNotFoundError<T>> {
@@ -530,7 +534,7 @@ mod tests {
 
     graph.add_undirected_edge(3, 4, "g".to_owned(), 9).unwrap();
 
-    let expected = vec![
+    let expected = Ok(vec![
       MinimumSpanningTreeEdge {
         from: 0,
         to: 1,
@@ -551,11 +555,23 @@ mod tests {
         to: 3,
         cost: 6,
       },
-    ];
+    ]);
 
     let actual = graph.minimum_spanning_tree_starting_from_vertex(&0);
 
     assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn minimum_spanning_tree_starting_from_vertex_returns_error_when_starting_vertex_is_not_in_the_graph(
+  ) {
+    let graph = Graph::new();
+
+    let expected = Err(VertexNotFoundError(0));
+
+    let actual = graph.minimum_spanning_tree_starting_from_vertex(&0);
+
+    assert_eq!(actual, expected)
   }
 
   #[test]
