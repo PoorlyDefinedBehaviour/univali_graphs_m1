@@ -405,8 +405,6 @@ mod tests {
       }]
     };
 
-    dbg!(&graph.adjacency_list);
-
     assert_eq!(graph.adjacency_list, expected);
   }
 
@@ -466,9 +464,6 @@ mod tests {
         identifier: "b".to_owned(),
       }]
     };
-
-    dbg!(&expected);
-    dbg!(&graph.adjacency_list);
 
     assert_eq!(graph.adjacency_list, expected);
   }
@@ -588,17 +583,17 @@ mod tests {
     graph.add_vertex(2).unwrap();
     graph.add_vertex(3).unwrap();
 
-    graph.add_undirected_edge(0, 1, "a".to_owned(), 2).unwrap();
-    graph.add_undirected_edge(0, 2, "b".to_owned(), 6).unwrap();
+    graph.add_directed_edge(0, 1, "a".to_owned(), 2).unwrap();
+    graph.add_directed_edge(0, 2, "b".to_owned(), 6).unwrap();
 
-    graph.add_undirected_edge(1, 2, "c".to_owned(), 3).unwrap();
-    graph.add_undirected_edge(2, 3, "d".to_owned(), 8).unwrap();
-    graph.add_undirected_edge(3, 3, "e".to_owned(), 5).unwrap();
+    graph.add_directed_edge(1, 2, "c".to_owned(), 3).unwrap();
+    graph.add_directed_edge(2, 0, "d".to_owned(), 8).unwrap();
+    graph.add_directed_edge(2, 3, "e".to_owned(), 8).unwrap();
+    graph.add_directed_edge(3, 3, "f".to_owned(), 5).unwrap();
 
-    let expected = vec![0, 3, 2, 1, 4];
+    let expected = vec![2, 0, 3, 1];
 
     let actual = graph.bfs_path(&2);
-    dbg!(&actual);
 
     assert_eq!(actual, expected);
   }
