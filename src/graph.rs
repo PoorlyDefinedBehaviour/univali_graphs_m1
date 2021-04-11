@@ -118,14 +118,18 @@ impl<T: Eq + Hash + Clone> Graph<T> {
       },
     )?;
 
-    self.add_edge_to_vertex(
-      vertex_b,
-      Edge::Undirected {
-        vertex: vertex_a,
-        weight: weight,
-        identifier: identifier.clone(),
-      },
-    )
+    if vertex_a != vertex_b {
+      self.add_edge_to_vertex(
+        vertex_b,
+        Edge::Undirected {
+          vertex: vertex_a,
+          weight: weight,
+          identifier: identifier.clone(),
+        },
+      )?;
+    }
+
+    Ok(())
   }
 
   pub fn add_directed_edge(
@@ -255,6 +259,38 @@ impl<T: Eq + Hash + Clone> Graph<T> {
 
     path
   }
+
+  pub fn bfs_path(&self, starting_vertex: &T) -> Vec<T> {
+    let mut stack = LinkedList::new();
+    let mut path = Vec::new();
+    let mut visited_nodes = HashSet::new();
+
+    // O(1)
+    stack.push_back(starting_vertex.clone());
+
+    while !stack.is_empty() {
+      // O(1)
+      let current_vertex = stack.pop_front().unwrap();
+
+      // O(1)
+      if !visited_nodes.contains(&current_vertex) {
+        path.push(current_vertex.clone());
+      }
+
+      // O(1)~*
+      visited_nodes.insert(current_vertex.clone());
+
+      for neighbor in self.adjacency_list.get(&current_vertex).unwrap() {
+        // O(1)
+        if !visited_nodes.contains(edge_vertex(neighbor)) {
+          // O(1)
+          stack.push_back(edge_vertex(neighbor).clone());
+        }
+      }
+    }
+
+    path
+  }
 }
 
 #[cfg(test)]
@@ -354,6 +390,27 @@ mod tests {
   }
 
   #[test]
+  fn adds_undirected_edge_to_graph_without_duplication_when_edge_is_a_cycle() {
+    let mut graph = Graph::new();
+
+    graph.add_vertex(1).unwrap();
+
+    graph.add_undirected_edge(1, 1, "a".to_owned(), 2).unwrap();
+
+    let expected = hashmap! {
+      1 => vec![Edge::Undirected{
+        vertex: 1,
+        weight: 2,
+        identifier: "a".to_owned(),
+      }]
+    };
+
+    dbg!(&graph.adjacency_list);
+
+    assert_eq!(graph.adjacency_list, expected);
+  }
+
+  #[test]
   fn add_undirected_edge_returns_error_when_a_vertex_is_not_in_the_graph() {
     let mut graph = Graph::new();
 
@@ -383,6 +440,35 @@ mod tests {
       }],
       2 => vec![]
     };
+
+    assert_eq!(graph.adjacency_list, expected);
+  }
+
+  #[test]
+  fn adds_directed_edge_to_graph_without_duplication_when_edge_is_a_cycle() {
+    let mut graph = Graph::new();
+
+    graph.add_vertex(1).unwrap();
+    graph.add_vertex(2).unwrap();
+
+    graph.add_directed_edge(1, 1, "a".to_owned(), 2).unwrap();
+    graph.add_directed_edge(2, 2, "b".to_owned(), 2).unwrap();
+
+    let expected = hashmap! {
+      1 => vec![Edge::Directed{
+        vertex: 1,
+        weight: 2,
+        identifier: "a".to_owned(),
+      }],
+      2 => vec![Edge::Directed{
+        vertex: 2,
+        weight: 2,
+        identifier: "b".to_owned(),
+      }]
+    };
+
+    dbg!(&expected);
+    dbg!(&graph.adjacency_list);
 
     assert_eq!(graph.adjacency_list, expected);
   }
@@ -489,6 +575,30 @@ mod tests {
     let expected = vec![0, 3, 2, 1, 4];
 
     let actual = graph.dfs_path(&0);
+
+    assert_eq!(actual, expected);
+  }
+
+  #[test]
+  fn returns_bfs_path() {
+    let mut graph = Graph::new();
+
+    graph.add_vertex(0).unwrap();
+    graph.add_vertex(1).unwrap();
+    graph.add_vertex(2).unwrap();
+    graph.add_vertex(3).unwrap();
+
+    graph.add_undirected_edge(0, 1, "a".to_owned(), 2).unwrap();
+    graph.add_undirected_edge(0, 2, "b".to_owned(), 6).unwrap();
+
+    graph.add_undirected_edge(1, 2, "c".to_owned(), 3).unwrap();
+    graph.add_undirected_edge(2, 3, "d".to_owned(), 8).unwrap();
+    graph.add_undirected_edge(3, 3, "e".to_owned(), 5).unwrap();
+
+    let expected = vec![0, 3, 2, 1, 4];
+
+    let actual = graph.bfs_path(&2);
+    dbg!(&actual);
 
     assert_eq!(actual, expected);
   }
