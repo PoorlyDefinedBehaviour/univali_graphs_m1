@@ -154,7 +154,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     }
   }
 
-  pub fn remove_edge(&mut self, vertex_a: &T, vertex_b: &T) -> () {
+  pub fn remove_edge(&mut self, vertex_a: &T, vertex_b: &T) {
     if let Some(neighbors) = self.adjacency_list.remove(vertex_a) {
       let new_neighbors: Vec<Edge<T>> = neighbors
         .into_iter()
@@ -351,7 +351,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       .collect()
   }
 
-  fn mark_plus_vertices(&self, vertex: &T, pluses: &mut HashSet<T>) -> () {
+  fn mark_plus_vertices(&self, vertex: &T, pluses: &mut HashSet<T>) {
     pluses.insert(vertex.clone());
 
     let mut visited_vertices: HashSet<T> = HashSet::new();
@@ -384,7 +384,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     go(&self, vertex, pluses, &mut visited_vertices);
   }
 
-  fn mark_minus_vertices(&self, vertex: &T, minuses: &mut HashSet<T>) -> () {
+  fn mark_minus_vertices(&self, vertex: &T, minuses: &mut HashSet<T>) {
     minuses.insert(vertex.clone());
 
     let mut visited_vertices: HashSet<T> = HashSet::new();
