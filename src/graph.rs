@@ -409,8 +409,15 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     go(&self, vertex, minuses, &mut visited_vertices);
   }
 
-  pub fn strongly_connected_components(&self, starting_vertex: &T) -> Vec<Vec<T>> {
+  pub fn strongly_connected_components(
+    &self,
+    starting_vertex: &T,
+  ) -> Result<Vec<Vec<T>>, VertexNotFoundError<T>> {
     let mut components = vec![];
+
+    if !self.adjacency_list.contains_key(starting_vertex) {
+      return Err(VertexNotFoundError(starting_vertex.clone()));
+    }
 
     let mut vertices: Vec<T> = self.adjacency_list.keys().cloned().collect();
     let mut pluses = HashSet::new();
@@ -437,7 +444,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       if !vertices.is_empty() {
         current_vertex = vertices.last().cloned().unwrap();
       } else {
-        return components;
+        return Ok(components);
       }
     }
   }
@@ -810,11 +817,22 @@ mod tests {
 
     let expected = vec![vec![1, 2, 3, 7], vec![4, 5, 6, 8]];
 
-    let mut actual = graph.strongly_connected_components(&1);
+    let mut actual = graph.strongly_connected_components(&1).unwrap();
 
     for component in &mut actual {
       component.sort();
     }
+
+    assert_eq!(expected, actual);
+  }
+
+  #[test]
+  fn strongly_connected_components_returns_error_when_vertex_is_not_in_the_graph() {
+    let graph = Graph::new();
+
+    let expected = Err(VertexNotFoundError(5));
+
+    let actual = graph.strongly_connected_components(&5);
 
     assert_eq!(expected, actual);
   }
