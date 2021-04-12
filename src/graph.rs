@@ -39,10 +39,10 @@ pub struct Graph<T: PartialEq + Debug> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct DuplicatedVertexError<T>(T);
+pub struct DuplicatedVertexError<T>(pub T);
 
 #[derive(Debug, PartialEq)]
-pub struct VertexNotFoundError<T>(T);
+pub struct VertexNotFoundError<T>(pub T);
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct MinimumSpanningTreeEdge<T> {
