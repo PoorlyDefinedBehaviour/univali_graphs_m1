@@ -147,8 +147,8 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
         vertex_a,
         Edge::Directed {
           vertex: vertex_b,
-          weight: weight,
           identifier: identifier.clone(),
+          weight,
         },
       )
     }
