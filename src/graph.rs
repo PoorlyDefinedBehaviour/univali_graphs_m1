@@ -124,7 +124,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
         vertex_b,
         Edge::Undirected {
           vertex: vertex_a,
-          identifier: identifier.clone(),
+          identifier,
           weight,
         },
       )?;
@@ -147,7 +147,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
         vertex_a,
         Edge::Directed {
           vertex: vertex_b,
-          identifier: identifier.clone(),
+          identifier,
           weight,
         },
       )
@@ -305,10 +305,6 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     Ok(path)
   }
 
-  fn is_predecessor(&self, vertex_a: &T, vertex_b: &T) -> bool {
-    self.is_successor(vertex_b, vertex_a)
-  }
-
   fn is_successor(&self, vertex_a: &T, vertex_b: &T) -> bool {
     if vertex_a == vertex_b {
       return false;
@@ -338,11 +334,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       .adjacency_list
       .keys()
       .filter_map(|vertex| {
-        if self
-          .successors(vertex)
-          .iter()
-          .any(|successor| successor == current_vertex)
-        {
+        if self.is_successor(vertex, current_vertex) {
           Some(vertex.clone())
         } else {
           None
