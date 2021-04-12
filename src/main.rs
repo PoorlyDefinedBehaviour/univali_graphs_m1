@@ -40,7 +40,7 @@ fn main() {
     print!("> ");
 
     let buffer = read_input().replace("\n", "");
-    let mut input: LinkedList<&str> = buffer.split(" ").collect();
+    let mut input: LinkedList<&str> = buffer.split(' ').collect();
 
     match input.pop_front().unwrap() {
       "graph.new" => {
