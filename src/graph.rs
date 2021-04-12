@@ -114,8 +114,8 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       vertex_a.clone(),
       Edge::Undirected {
         vertex: vertex_b.clone(),
-        weight: weight,
         identifier: identifier.clone(),
+        weight,
       },
     )?;
 
@@ -124,8 +124,8 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
         vertex_b,
         Edge::Undirected {
           vertex: vertex_a,
-          weight: weight,
           identifier: identifier.clone(),
+          weight,
         },
       )?;
     }
