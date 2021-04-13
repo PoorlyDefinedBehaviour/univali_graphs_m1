@@ -413,11 +413,11 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     &self,
     starting_vertex: &T,
   ) -> Result<Vec<Vec<T>>, VertexNotFoundError<T>> {
-    let mut components = vec![];
-
     if !self.adjacency_list.contains_key(starting_vertex) {
       return Err(VertexNotFoundError(starting_vertex.clone()));
     }
+
+    let mut components = vec![];
 
     let mut vertices: Vec<T> = self.adjacency_list.keys().cloned().collect();
     let mut pluses = HashSet::new();
