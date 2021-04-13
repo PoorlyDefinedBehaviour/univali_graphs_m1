@@ -346,8 +346,6 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
   fn mark_plus_vertices(&self, vertex: &T, pluses: &mut HashSet<T>) {
     pluses.insert(vertex.clone());
 
-    let mut visited_vertices: HashSet<T> = HashSet::new();
-
     fn go<T: Eq + Hash + Clone + Debug>(
       graph: &Graph<T>,
       vertex: &T,
@@ -373,13 +371,12 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       }
     }
 
+    let mut visited_vertices: HashSet<T> = HashSet::new();
     go(&self, vertex, pluses, &mut visited_vertices);
   }
 
   fn mark_minus_vertices(&self, vertex: &T, minuses: &mut HashSet<T>) {
     minuses.insert(vertex.clone());
-
-    let mut visited_vertices: HashSet<T> = HashSet::new();
 
     fn go<T: Eq + Hash + Clone + Debug>(
       graph: &Graph<T>,
@@ -406,6 +403,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       }
     }
 
+    let mut visited_vertices: HashSet<T> = HashSet::new();
     go(&self, vertex, minuses, &mut visited_vertices);
   }
 
@@ -413,11 +411,11 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
     &self,
     starting_vertex: &T,
   ) -> Result<Vec<Vec<T>>, VertexNotFoundError<T>> {
-    let mut components = vec![];
-
     if !self.adjacency_list.contains_key(starting_vertex) {
       return Err(VertexNotFoundError(starting_vertex.clone()));
     }
+
+    let mut components = vec![];
 
     let mut vertices: Vec<T> = self.adjacency_list.keys().cloned().collect();
     let mut pluses = HashSet::new();
