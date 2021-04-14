@@ -39,8 +39,9 @@ fn main() {
   loop {
     print!("> ");
 
-    let buffer = read_input().replace("\n", "");
-    let mut input: LinkedList<&str> = buffer.split(' ').collect();
+    let buffer = read_input();
+
+    let mut input: LinkedList<&str> = buffer.trim().split(' ').collect();
 
     match input.pop_front().unwrap() {
       "graph.new" => {
