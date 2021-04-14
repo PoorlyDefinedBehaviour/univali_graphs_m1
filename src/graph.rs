@@ -31,11 +31,11 @@ fn edge_weight<T: PartialEq>(edge: &Edge<T>) -> i32 {
   }
 }
 
-pub type AdjencyList<KEY, VALUE> = HashMap<KEY, VALUE>;
+pub type AdjacencyList<KEY, VALUE> = HashMap<KEY, VALUE>;
 
 #[derive(Debug, Default)]
 pub struct Graph<T: PartialEq + Debug> {
-  pub adjacency_list: AdjencyList<T, Vec<Edge<T>>>,
+  pub adjacency_list: AdjacencyList<T, Vec<Edge<T>>>,
 }
 
 #[derive(Debug, PartialEq)]
