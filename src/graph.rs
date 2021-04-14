@@ -82,13 +82,9 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
   }
 
   pub fn remove_vertex(&mut self, vertex: &T) -> Result<(), VertexNotFoundError<T>> {
-    match self.adjacency_list.get(vertex) {
+    match self.adjacency_list.remove(vertex) {
       None => Err(VertexNotFoundError(vertex.clone())),
-      Some(_) => {
-        self.adjacency_list.remove(&vertex);
-
-        Ok(())
-      }
+      Some(_) => Ok(()),
     }
   }
 
