@@ -270,16 +270,16 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
       return Err(VertexNotFoundError(starting_vertex.clone()));
     }
 
-    let mut stack = LinkedList::new();
+    let mut queue = LinkedList::new();
     let mut path = Vec::new();
     let mut visited_nodes = HashSet::new();
 
     // O(1)
-    stack.push_back(starting_vertex.clone());
+    queue.push_back(starting_vertex.clone());
 
-    while !stack.is_empty() {
+    while !queue.is_empty() {
       // O(1)
-      let current_vertex = stack.pop_front().unwrap();
+      let current_vertex = queue.pop_front().unwrap();
 
       // O(1)
       if !visited_nodes.contains(&current_vertex) {
@@ -293,7 +293,7 @@ impl<T: Eq + Hash + Clone + Debug> Graph<T> {
         // O(1)
         if !visited_nodes.contains(edge_vertex(neighbor)) {
           // O(1)
-          stack.push_back(edge_vertex(neighbor).clone());
+          queue.push_back(edge_vertex(neighbor).clone());
         }
       }
     }
